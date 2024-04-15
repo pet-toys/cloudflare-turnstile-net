@@ -1,0 +1,87 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CB7AD0CB-9B42-42F8-8B85-EA8218C7C4EC}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		.globalconfig = .globalconfig
+		Directory.Build.props = Directory.Build.props
+		global.json = global.json
+		LICENSE = LICENSE
+		NuGet.Config = NuGet.Config
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{AAC8E365-7AE9-421B-9024-3248F4613430}"
+	ProjectSection(SolutionItems) = preProject
+		docs\CODE_OF_CONDUCT.md = docs\CODE_OF_CONDUCT.md
+		docs\CONTRIBUTING.md = docs\CONTRIBUTING.md
+		docs\SECURITY.md = docs\SECURITY.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{D94DA0C7-90FC-4B5D-ADB1-82D4186C5ADB}"
+	ProjectSection(SolutionItems) = preProject
+		assets\icon.png = assets\icon.png
+		assets\key.snk = assets\key.snk
+		assets\RELEASE-NOTES.txt = assets\RELEASE-NOTES.txt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{784BF5B3-315C-4607-AEF7-D9AE9CFEC9FE}"
+	ProjectSection(SolutionItems) = preProject
+		.github\PULL_REQUEST_TEMPLATE.md = .github\PULL_REQUEST_TEMPLATE.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ISSUE_TEMPLATE", "ISSUE_TEMPLATE", "{941396D6-B7CC-4320-8B6E-A1B92349FD17}"
+	ProjectSection(SolutionItems) = preProject
+		.github\ISSUE_TEMPLATE\bug_report.md = .github\ISSUE_TEMPLATE\bug_report.md
+		.github\ISSUE_TEMPLATE\feature_request.md = .github\ISSUE_TEMPLATE\feature_request.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{64DB4230-4B0E-4D56-B2D3-6A8E497AFA5A}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-deploy.yml = .github\workflows\build-deploy.yml
+		.github\workflows\test.yml = .github\workflows\test.yml
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetToys.CloudflareTurnstileNet", "src\PetToys.CloudflareTurnstileNet\PetToys.CloudflareTurnstileNet.csproj", "{E7188CD2-CEED-481F-A6AE-06E66B662326}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{79CD5B1C-AB8C-495A-A4C7-6B2FAEE9BFF2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0D7CCCCB-8F60-45D5-83EF-F68E6C963A04}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetToys.CloudflareTurnstileNet.Tests", "test\PetToys.CloudflareTurnstileNet.Tests\PetToys.CloudflareTurnstileNet.Tests.csproj", "{A0BDB9AB-B897-49A9-9DAB-AFFDED433FA7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E7188CD2-CEED-481F-A6AE-06E66B662326}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7188CD2-CEED-481F-A6AE-06E66B662326}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7188CD2-CEED-481F-A6AE-06E66B662326}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7188CD2-CEED-481F-A6AE-06E66B662326}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0BDB9AB-B897-49A9-9DAB-AFFDED433FA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0BDB9AB-B897-49A9-9DAB-AFFDED433FA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0BDB9AB-B897-49A9-9DAB-AFFDED433FA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0BDB9AB-B897-49A9-9DAB-AFFDED433FA7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AAC8E365-7AE9-421B-9024-3248F4613430} = {CB7AD0CB-9B42-42F8-8B85-EA8218C7C4EC}
+		{D94DA0C7-90FC-4B5D-ADB1-82D4186C5ADB} = {CB7AD0CB-9B42-42F8-8B85-EA8218C7C4EC}
+		{784BF5B3-315C-4607-AEF7-D9AE9CFEC9FE} = {CB7AD0CB-9B42-42F8-8B85-EA8218C7C4EC}
+		{941396D6-B7CC-4320-8B6E-A1B92349FD17} = {784BF5B3-315C-4607-AEF7-D9AE9CFEC9FE}
+		{64DB4230-4B0E-4D56-B2D3-6A8E497AFA5A} = {784BF5B3-315C-4607-AEF7-D9AE9CFEC9FE}
+		{E7188CD2-CEED-481F-A6AE-06E66B662326} = {79CD5B1C-AB8C-495A-A4C7-6B2FAEE9BFF2}
+		{A0BDB9AB-B897-49A9-9DAB-AFFDED433FA7} = {0D7CCCCB-8F60-45D5-83EF-F68E6C963A04}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {660D810A-257D-4375-8071-03F1E974EFD1}
+	EndGlobalSection
+EndGlobal

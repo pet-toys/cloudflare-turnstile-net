@@ -1,0 +1,150 @@
+name: build-deplpy
+
+on:
+  release:
+    types:
+    - published
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  ProjectsToPack: "src/**/*.csproj"
+  PackagesSubfolder: "nuget"
+  ArtifactName: packages
+  ValidatorVersion: "0.0.1-preview.304"
+  GitHubPackageSource: "https://nuget.pkg.github.com/pet-toys/index.json"
+  NuGetOrgPackageSource: "https://api.nuget.org/v3/index.json"
+  DevRepositoryUrl: "https://github.com/pet-toys/cloudflare-turnstile-net/pkgs/nuget/PetToys.CloudflareTurnstileNet"
+  ProdRepositoryUrl: "https://www.nuget.org/packages/PetToys.CloudflareTurnstileNet"
+
+jobs:
+  test:
+    name: test
+    uses: pet-toys/cloudflare-turnstile-net/.github/workflows/test.yml@dev
+ 
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: |
+      startsWith(github.event.release.tag_name, 'v')
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        global-json-file: global.json
+
+    - name: Version
+      run: echo "PACKAGE_VERSION=$(echo ${{ github.event.release.tag_name }} | cut -c 2-)" >> $GITHUB_ENV
+
+    - name: Release notes
+      run: echo "${{ github.event.release.body }}" > assets/RELEASE-NOTES.txt
+
+    - name: Restore
+      run: dotnet restore ${{ env.ProjectsToPack }}
+
+    - name: Build
+      run: dotnet build ${{ env.ProjectsToPack }} --configuration Release --no-restore -p:Version=${{ env.PACKAGE_VERSION }}
+
+    - name: Pack
+      run: dotnet pack ${{ env.ProjectsToPack }} --configuration Release  --no-build --include-symbols --output ${{ github.workspace }}/${{ env.PackagesSubfolder }} -p:PackageVersion=${{ env.PACKAGE_VERSION }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.ArtifactName }}
+        if-no-files-found: error
+        path: |
+          ${{ github.workspace }}/${{ env.PackagesSubfolder }}/*.nupkg
+          ${{ github.workspace }}/${{ env.PackagesSubfolder }}/*.snupkg
+          NuGet.Config
+          global.json
+
+
+  validation:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ArtifactName }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        global-json-file: global.json
+
+    - name: Validation
+      shell: pwsh
+      run: |
+        dotnet tool install --global dotnet-validate --version ${{ env.ValidatorVersion }}
+        $packages = Get-ChildItem -Filter "${{ env.PackagesSubfolder }}/*.nupkg" | ForEach-Object { $_.FullName }
+        $invalidPackages = 0
+        foreach ($package in $packages) {
+          dotnet validate package local $package
+          if ($LASTEXITCODE -ne 0) {
+            $invalidPackages++
+          }
+        }
+        if ($invalidPackages -gt 0) {
+          Write-Output "::error::$invalidPackages NuGet package(s) failed validation."
+        }
+
+  deploy-github:
+    needs: validation
+    runs-on: ubuntu-latest
+    environment: 
+      name: development
+      url: ${{ env.DevRepositoryUrl }}
+    if: |
+      github.event.repository.fork == false &&
+      github.event.release.prerelease == true
+    permissions:
+      packages: write
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ArtifactName }}
+
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: 'latest'
+
+    - name: Push to github
+      working-directory: ${{ env.PackagesSubfolder }}
+      run: |
+        nuget push "*.nupkg" -ApiKey ${{ secrets.GITHUB_TOKEN }} -SkipDuplicate -Source ${{ env.GitHubPackageSource }}
+ 
+  deploy-nuget:
+    needs: validation
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      url: ${{ env.ProdRepositoryUrl }}
+    if: |
+      github.event.repository.fork == false &&
+      github.event.release.prerelease == false
+
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ env.ArtifactName }}
+
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v1
+      with:
+        nuget-version: 'latest'
+
+    - name: Push to nuget.org
+      working-directory: ${{ env.PackagesSubfolder }}
+      run: |
+        nuget push "*.nupkg" -ApiKey ${{ secrets.NUGET_API_KEY }} -SkipDuplicate -Source ${{ env.NuGetOrgPackageSource }}
