@@ -14,7 +14,7 @@ namespace PetToys.CloudflareTurnstileNet
     {
         public bool IsReusable => true;
 
-        public string ErrorMessage { get; set; } = "Your request cannot be completed because you failed Captcha verification.";
+        public string ErrorMessage { get; set; } = "Your request cannot be completed because you failed Cloudflare Turnstile verification.";
 
         public string FormField { get; set; } = "cf-turnstile-response";
 
