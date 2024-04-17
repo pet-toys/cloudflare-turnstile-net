@@ -54,7 +54,7 @@ namespace PetToys.CloudflareTurnstileNet
                     ||
                     !await service.VerifyAsync(token.ToString()))
                 {
-                    context.ModelState.AddModelError(formField, errorMessage);
+                    context.ModelState.AddModelError(string.Empty, errorMessage);
                 }
             }
         }
