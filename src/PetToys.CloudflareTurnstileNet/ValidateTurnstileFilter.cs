@@ -18,7 +18,8 @@ namespace PetToys.CloudflareTurnstileNet
         ITurnstileService service,
         string formField,
         string formErrorMessage,
-        string? fieldErrorMessage)
+        string? fieldErrorMessage,
+        bool useRemoteIp)
         : IAsyncActionFilter, IAsyncPageFilter
     {
         private static readonly Func<Type, IStringLocalizerFactory, IStringLocalizer> LocalizerProvider = (type, factory) => factory.Create(type);
@@ -76,7 +77,7 @@ namespace PetToys.CloudflareTurnstileNet
             {
                 if (!context.HttpContext.Request.Form.TryGetValue(formField, out var token)
                     ||
-                    !await service.VerifyAsync(token.ToString()))
+                    !await service.VerifyAsync(token.ToString(), useRemoteIp ? context.HttpContext.Connection.RemoteIpAddress : null))
                 {
                     context.ModelState.AddModelError(string.Empty, GetErrorMessage(context, formErrorMessage));
 

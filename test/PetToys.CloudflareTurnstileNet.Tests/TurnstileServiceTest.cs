@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using System;
+using System.Net;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +21,7 @@ namespace PetToys.CloudflareTurnstileNet.Tests
             var provider = CreateProvider(string.Empty, secretKey);
             var sut = provider.GetRequiredService<ITurnstileService>();
 
-            var result = await sut.VerifyAsync("token");
+            var result = await sut.VerifyAsync("token", IPAddress.Loopback, Guid.NewGuid());
 
             result.Should().Be(value);
         }

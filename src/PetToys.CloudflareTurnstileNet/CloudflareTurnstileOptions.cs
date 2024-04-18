@@ -7,7 +7,7 @@ namespace PetToys.CloudflareTurnstileNet
 {
     public sealed class CloudflareTurnstileOptions
     {
-        internal static readonly Uri ValidationBaseUri = new("https://challenges.cloudflare.com");
+        internal static readonly Uri ValidationBaseUri = new("https://challenges.cloudflare.com/turnstile/v0/siteverify");
 
         [Required(AllowEmptyStrings = false)]
         public string SiteKey { get; set; } = string.Empty;

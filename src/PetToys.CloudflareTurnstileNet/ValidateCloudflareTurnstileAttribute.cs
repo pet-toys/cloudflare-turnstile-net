@@ -26,10 +26,12 @@ namespace PetToys.CloudflareTurnstileNet
 
         public string FormField { get; set; } = "cf-turnstile-response";
 
+        public bool UseRemoteIp { get; set; }
+
         public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
         {
             var service = serviceProvider.GetRequiredService<ITurnstileService>();
-            return new ValidateTurnstileFilter(service, FormField, FormErrorMessage, FieldErrorMessage);
+            return new ValidateTurnstileFilter(service, FormField, FormErrorMessage, FieldErrorMessage, UseRemoteIp);
         }
     }
 }
