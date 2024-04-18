@@ -1,12 +1,20 @@
 ﻿#nullable enable
 
 using System;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace PetToys.CloudflareTurnstileNet
 {
     public static class ServiceCollectionExtensions
     {
+        public static IServiceCollection AddCloudflareTurnstile(this IServiceCollection services, IConfigurationSection configurationSection)
+        {
+            services.Configure<CloudflareTurnstileOptions>(configurationSection);
+            services.AddTurnstileInternal();
+            return services;
+        }
+
         public static IServiceCollection AddCloudflareTurnstile(this IServiceCollection services, Action<CloudflareTurnstileOptions> configureOptions)
         {
             services.Configure(configureOptions);
