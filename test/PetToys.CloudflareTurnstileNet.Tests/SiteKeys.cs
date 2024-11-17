@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-namespace PetToys.CloudflareTurnstileNet.Tests
+﻿namespace PetToys.CloudflareTurnstileNet.Tests
 {
     internal static class SiteKeys
     {
