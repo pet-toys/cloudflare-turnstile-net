@@ -5,11 +5,9 @@ on:
   workflow_call:
   push:
     branches:
-    - main
     - dev
   pull_request:
     branches:
-    - main
     - dev
 
 jobs:
@@ -33,6 +31,10 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         global-json-file: global.json
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
 
     - name: Restore
       run: dotnet restore
