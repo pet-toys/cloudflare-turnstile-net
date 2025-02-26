@@ -1,7 +1,7 @@
 ﻿<Project>
   <PropertyGroup>
     <Authors>andbaz</Authors>
-    <Copyright>Copyright © $([System.DateTime]::UtcNow.ToString(`yyyy`)) $(Authors). All rights reserved.</Copyright>
+    <Copyright>Copyright © 2024 - $([System.DateTime]::UtcNow.ToString(`yyyy`)) $(Authors). All rights reserved.</Copyright>
     <Description>Cloudflare Turnstile for ASPNET.</Description>
   </PropertyGroup>
 
@@ -12,6 +12,8 @@
     <AnalysisLevel>9.0-Recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
 
@@ -26,7 +28,7 @@
     <PackageProjectUrl>https://github.com/pet-toys/cloudflare-turnstile-net</PackageProjectUrl>
     <PackageTags>cloudflare;turnstile;captcha</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 

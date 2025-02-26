@@ -6,6 +6,12 @@ dotnet_diagnostic.CA1848.severity = none
 # IDE0005: Using directive is unnecessary.
 dotnet_diagnostic.IDE0005.severity = warning
 
+# IDE0008: Use explicit type
+dotnet_diagnostic.IDE0008.severity = none
+
+# IDE0011: Add braces
+dotnet_diagnostic.IDE0011.severity = none
+
 # IDE0077: Avoid legacy format target in global 'SuppressMessageAttribute'
 dotnet_diagnostic.IDE0077.severity = warning
 
@@ -21,14 +27,17 @@ dotnet_diagnostic.IDE0130.severity = warning
 # IDE0301: Simplify collection initialization
 dotnet_style_prefer_collection_expression = false
 
-# SA1309: Field names should not begin with underscore
-dotnet_diagnostic.SA1309.severity = none
+# IDE0161: Convert to file-scoped namespace
+dotnet_diagnostic.IDE0161.severity = warning
+
+# SA1101: Prefix local calls with this
+dotnet_diagnostic.SA1101.severity = none
 
 # SA1200: Using directives should be placed correctly
 dotnet_diagnostic.SA1200.severity = none
 
-# SA1101: Prefix local calls with this
-dotnet_diagnostic.SA1101.severity = none
+# SA1309: Field names should not begin with underscore
+dotnet_diagnostic.SA1309.severity = none
 
 # SA1404: Code analysis suppression should have justification
 dotnet_diagnostic.SA1404.severity = none
@@ -44,9 +53,3 @@ dotnet_diagnostic.SA1600.severity = none
 
 # SA1633: File should have header
 dotnet_diagnostic.SA1633.severity = none
-
-# IDE0008: Use explicit type
-dotnet_diagnostic.IDE0008.severity = none
-
-# IDE0011: Add braces
-dotnet_diagnostic.IDE0011.severity = none

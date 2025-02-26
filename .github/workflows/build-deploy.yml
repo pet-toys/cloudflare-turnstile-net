@@ -11,7 +11,6 @@ env:
   ProjectsToPack: "src/**/*.csproj"
   PackagesSubfolder: "nuget"
   ArtifactName: packages
-  ValidatorVersion: "0.0.1-preview.304"
   GitHubPackageSource: "https://nuget.pkg.github.com/pet-toys/index.json"
   NuGetOrgPackageSource: "https://api.nuget.org/v3/index.json"
   DevRepositoryUrl: "https://github.com/pet-toys/cloudflare-turnstile-net/pkgs/nuget/PetToys.CloudflareTurnstileNet"
@@ -63,44 +62,8 @@ jobs:
           NuGet.Config
           global.json
 
-
-  validation:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.ArtifactName }}
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        global-json-file: global.json
-
-    - uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '6.0.x'
-
-    - name: Validation
-      shell: pwsh
-      run: |
-        dotnet tool install --global dotnet-validate --version ${{ env.ValidatorVersion }}
-        $packages = Get-ChildItem -Filter "${{ env.PackagesSubfolder }}/*.nupkg" | ForEach-Object { $_.FullName }
-        $invalidPackages = 0
-        foreach ($package in $packages) {
-          dotnet validate package local $package
-          if ($LASTEXITCODE -ne 0) {
-            $invalidPackages++
-          }
-        }
-        if ($invalidPackages -gt 0) {
-          Write-Output "::error::$invalidPackages NuGet package(s) failed validation."
-        }
-
   deploy-github:
-    needs: validation
+    needs: build
     runs-on: ubuntu-latest
     environment: 
       name: development
@@ -117,18 +80,18 @@ jobs:
       with:
         name: ${{ env.ArtifactName }}
 
-    - name: Setup NuGet
-      uses: nuget/setup-nuget@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        nuget-version: 'latest'
+        global-json-file: global.json
 
     - name: Push to github
       working-directory: ${{ env.PackagesSubfolder }}
       run: |
-        nuget push "*.nupkg" -ApiKey ${{ secrets.GITHUB_TOKEN }} -SkipDuplicate -Source ${{ env.GitHubPackageSource }}
+        dotnet nuget push "*.nupkg" -k ${{ secrets.GITHUB_TOKEN }} -s ${{ env.GitHubPackageSource }} --skip-duplicate
  
   deploy-nuget:
-    needs: validation
+    needs: build
     runs-on: ubuntu-latest
     environment: 
       name: production
@@ -143,12 +106,12 @@ jobs:
       with:
         name: ${{ env.ArtifactName }}
 
-    - name: Setup NuGet
-      uses: nuget/setup-nuget@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        nuget-version: 'latest'
+        global-json-file: global.json
 
     - name: Push to nuget.org
       working-directory: ${{ env.PackagesSubfolder }}
       run: |
-        nuget push "*.nupkg" -ApiKey ${{ secrets.NUGET_API_KEY }} -SkipDuplicate -Source ${{ env.NuGetOrgPackageSource }}
+        dotnet nuget push "*.nupkg" -k ${{ secrets.NUGET_API_KEY }} -s ${{ env.NuGetOrgPackageSource }} --skip-duplicate

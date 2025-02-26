@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 		.globalconfig = .globalconfig
 		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
 		global.json = global.json
 		LICENSE = LICENSE
 		NuGet.Config = NuGet.Config
@@ -49,8 +50,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PetToys.CloudflareTurnstileNet", "src\PetToys.CloudflareTurnstileNet\PetToys.CloudflareTurnstileNet.csproj", "{E7188CD2-CEED-481F-A6AE-06E66B662326}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{79CD5B1C-AB8C-495A-A4C7-6B2FAEE9BFF2}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Packages.props = src\Directory.Packages.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0D7CCCCB-8F60-45D5-83EF-F68E6C963A04}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Packages.props = test\Directory.Packages.props
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PetToys.CloudflareTurnstileNet.Tests", "test\PetToys.CloudflareTurnstileNet.Tests\PetToys.CloudflareTurnstileNet.Tests.csproj", "{A0BDB9AB-B897-49A9-9DAB-AFFDED433FA7}"
 EndProject

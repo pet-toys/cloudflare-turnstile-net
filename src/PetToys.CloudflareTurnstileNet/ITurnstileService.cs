@@ -2,10 +2,9 @@
 using System.Net;
 using System.Threading.Tasks;
 
-namespace PetToys.CloudflareTurnstileNet
+namespace PetToys.CloudflareTurnstileNet;
+
+public interface ITurnstileService
 {
-    public interface ITurnstileService
-    {
-        Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, Guid? idempotencyKey = null);
-    }
+    Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, Guid? idempotencyKey = null);
 }

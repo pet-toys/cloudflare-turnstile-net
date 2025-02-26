@@ -1,4 +1,0 @@
-version 1.2.0
-+ added support net9
-~ some improvements
-- out of support net6
