@@ -15,6 +15,7 @@ namespace PetToys.CloudflareTurnstileNet;
 // see: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
 internal sealed class TurnstileService(
     HttpClient client,
+    ScopeWrapper scopeWrapper,
     IOptionsSnapshot<CloudflareTurnstileOptions> optionsSnapshot,
     ILogger<TurnstileService> logger)
     : ITurnstileService
@@ -24,7 +25,7 @@ internal sealed class TurnstileService(
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
-    public async Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, Guid? idempotencyKey = null)
+    public async Task<bool> VerifyAsync(string token, bool useIdempotencyKey, IPAddress? remoteIp = null)
     {
         var message = new HttpRequestMessage()
         {
@@ -35,7 +36,7 @@ internal sealed class TurnstileService(
                     SecretKey = optionsSnapshot.Value.SecretKey,
                     Token = token,
                     RemoteIp = remoteIp?.ToString(),
-                    IdempotencyKey = idempotencyKey,
+                    IdempotencyKey = useIdempotencyKey ? scopeWrapper.Uid : null,
                 },
                 MediaTypeHeaderValue.Parse(MediaTypeNames.Application.Json),
                 JsonOptions),

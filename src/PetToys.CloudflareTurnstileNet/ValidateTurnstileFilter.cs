@@ -17,7 +17,8 @@ internal sealed class ValidateTurnstileFilter(
     string formField,
     string formErrorMessage,
     string? fieldErrorMessage,
-    bool useRemoteIp)
+    bool useRemoteIp,
+    bool useIdempotencyKey)
     : IAsyncActionFilter, IAsyncPageFilter
 {
     private static readonly Func<Type, IStringLocalizerFactory, IStringLocalizer> LocalizerProvider = (type, factory) => factory.Create(type);
@@ -75,7 +76,10 @@ internal sealed class ValidateTurnstileFilter(
         {
             if (!context.HttpContext.Request.Form.TryGetValue(formField, out var token)
                 ||
-                !await service.VerifyAsync(token.ToString(), useRemoteIp ? context.HttpContext.Connection.RemoteIpAddress : null))
+                !await service.VerifyAsync(
+                    token.ToString(),
+                    useIdempotencyKey,
+                    useRemoteIp ? context.HttpContext.Connection.RemoteIpAddress : null))
             {
                 context.ModelState.AddModelError(string.Empty, GetErrorMessage(context, formErrorMessage));
 

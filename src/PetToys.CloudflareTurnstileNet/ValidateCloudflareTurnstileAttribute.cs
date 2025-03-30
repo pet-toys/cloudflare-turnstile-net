@@ -15,20 +15,15 @@ public sealed class ValidateCloudflareTurnstileAttribute : Attribute, IFilterFac
 
     public string? FieldErrorMessage { get; set; }
 
-    [Obsolete($"Use {nameof(FormErrorMessage)} instead.", false)]
-    public string ErrorMessage
-    {
-        get => FormErrorMessage;
-        set => FormErrorMessage = value;
-    }
-
     public string FormField { get; set; } = "cf-turnstile-response";
 
     public bool UseRemoteIp { get; set; }
 
+    public bool UseIdempotencyKey { get; set; }
+
     public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
     {
         var service = serviceProvider.GetRequiredService<ITurnstileService>();
-        return new ValidateTurnstileFilter(service, FormField, FormErrorMessage, FieldErrorMessage, UseRemoteIp);
+        return new ValidateTurnstileFilter(service, FormField, FormErrorMessage, FieldErrorMessage, UseRemoteIp, UseIdempotencyKey);
     }
 }

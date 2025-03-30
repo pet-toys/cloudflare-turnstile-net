@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +18,7 @@ public sealed class TurnstileServiceTest
         var provider = CreateProvider(string.Empty, secretKey);
         var sut = provider.GetRequiredService<ITurnstileService>();
 
-        var result = await sut.VerifyAsync("token", IPAddress.Loopback, Guid.NewGuid());
+        var result = await sut.VerifyAsync("token", true, IPAddress.Loopback);
 
         result.Should().Be(value);
     }
