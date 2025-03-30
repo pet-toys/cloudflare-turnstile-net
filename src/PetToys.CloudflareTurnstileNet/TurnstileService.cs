@@ -25,7 +25,7 @@ internal sealed class TurnstileService(
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
-    public async Task<bool> VerifyAsync(string token, bool useIdempotencyKey, IPAddress? remoteIp = null)
+    public async Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, bool useIdempotencyKey = false)
     {
         var message = new HttpRequestMessage()
         {

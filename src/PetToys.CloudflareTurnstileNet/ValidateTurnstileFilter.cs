@@ -78,8 +78,8 @@ internal sealed class ValidateTurnstileFilter(
                 ||
                 !await service.VerifyAsync(
                     token.ToString(),
-                    useIdempotencyKey,
-                    useRemoteIp ? context.HttpContext.Connection.RemoteIpAddress : null))
+                    useRemoteIp ? context.HttpContext.Connection.RemoteIpAddress : null,
+                    useIdempotencyKey))
             {
                 context.ModelState.AddModelError(string.Empty, GetErrorMessage(context, formErrorMessage));
 

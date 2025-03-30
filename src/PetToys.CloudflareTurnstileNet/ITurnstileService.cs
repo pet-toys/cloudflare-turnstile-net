@@ -5,5 +5,5 @@ namespace PetToys.CloudflareTurnstileNet;
 
 public interface ITurnstileService
 {
-    Task<bool> VerifyAsync(string token, bool useIdempotencyKey, IPAddress? remoteIp = null);
+    Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, bool useIdempotencyKey = false);
 }

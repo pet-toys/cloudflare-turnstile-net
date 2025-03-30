@@ -18,7 +18,7 @@ public sealed class TurnstileServiceTest
         var provider = CreateProvider(string.Empty, secretKey);
         var sut = provider.GetRequiredService<ITurnstileService>();
 
-        var result = await sut.VerifyAsync("token", true, IPAddress.Loopback);
+        var result = await sut.VerifyAsync("token", IPAddress.Loopback, true);
 
         result.Should().Be(value);
     }
