@@ -9,13 +9,16 @@ namespace PetToys.CloudflareTurnstileNet;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
 public sealed class ValidateCloudflareTurnstileAttribute : Attribute, IFilterFactory
 {
+    private const string DefaultFormField = "cf-turnstile-response";
+    private const string DefaultFormErrorMessage = "Your request cannot be completed because you failed Cloudflare Turnstile verification.";
+
     public bool IsReusable => true;
 
-    public string FormErrorMessage { get; set; } = "Your request cannot be completed because you failed Cloudflare Turnstile verification.";
+    public string FormErrorMessage { get; set; } = DefaultFormErrorMessage;
 
     public string? FieldErrorMessage { get; set; }
 
-    public string FormField { get; set; } = "cf-turnstile-response";
+    public string FormField { get; set; } = DefaultFormField;
 
     public bool UseRemoteIp { get; set; }
 

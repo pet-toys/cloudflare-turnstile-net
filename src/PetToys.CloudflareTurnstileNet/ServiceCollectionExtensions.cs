@@ -30,13 +30,7 @@ public static class ServiceCollectionExtensions
 
     private static IHttpClientBuilder AddTurnstileInternal(this IServiceCollection services)
     {
-        services.AddLogging();
         services.AddScoped<ScopeWrapper>();
-        var httpBuilder = services.AddHttpClient<ITurnstileService, TurnstileService>((sp, client) =>
-        {
-            client.BaseAddress = CloudflareTurnstileOptions.ValidationBaseUri;
-        });
-
-        return httpBuilder;
+        return services.AddHttpClient<ITurnstileService, TurnstileService>((_, client) => client.BaseAddress = CloudflareTurnstileOptions.ValidationBaseUri);
     }
 }

@@ -7,7 +7,6 @@ using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace PetToys.CloudflareTurnstileNet;
@@ -16,8 +15,7 @@ namespace PetToys.CloudflareTurnstileNet;
 internal sealed class TurnstileService(
     HttpClient client,
     ScopeWrapper scopeWrapper,
-    IOptionsSnapshot<CloudflareTurnstileOptions> optionsSnapshot,
-    ILogger<TurnstileService> logger)
+    IOptionsSnapshot<CloudflareTurnstileOptions> optionsSnapshot)
     : ITurnstileService
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -43,19 +41,12 @@ internal sealed class TurnstileService(
         };
 
         var response = await client.SendAsync(message);
-        if (!response.IsSuccessStatusCode)
-        {
-            logger.LogWarning("Returned non successful status code '{Code}'. {Reason}", response.StatusCode, response.ReasonPhrase);
-            return false;
-        }
+        if (!response.IsSuccessStatusCode) return false;
 
         var json = await response.Content.ReadAsStringAsync();
-        logger.LogTrace("Verification response: {Response}", json);
 
         var result = JsonSerializer.Deserialize<ValidationResponse>(json);
-        if (result?.Success == true) return true;
-        logger.LogWarning("Unsuccessful result: {Response}", json);
-        return false;
+        return result?.Success == true;
     }
 
     private sealed class RequestMessage
