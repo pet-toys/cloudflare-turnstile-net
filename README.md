@@ -6,12 +6,6 @@ Based on the following [project](https://github.com/michaelvs97/AspNetCore.ReCap
 
 Provided under the [Apache License, Version 2.0](http://apache.org/licenses/LICENSE-2.0.html).
 
-[nuget-v-badge]: https://img.shields.io/nuget/v/PetToys.CloudflareTurnstileNet.svg
-[nuget-dt-badge]: https://img.shields.io/nuget/dt/PetToys.CloudflareTurnstileNet.svg
-[nuget-url]: https://www.nuget.org/packages/PetToys.CloudflareTurnstileNet/
-[test-badge]: https://github.com/pet-toys/cloudflare-turnstile-net/actions/workflows/test.yml/badge.svg?branch=dev
-[test-url]: https://github.com/pet-toys/cloudflare-turnstile-net/actions?query=workflow%3Atest+branch%3Adev
-
 ## Requirements
 
 You must have a CloudFlare account. Create a Turnstile widget for your form or site. You will need the SiteKey and SecretKey.
@@ -157,3 +151,9 @@ public async Task<IActionResult> OnPostAsync([FromForm(Name = "cf-turnstile-resp
 	// other custom validation
 
 ```
+
+[nuget-v-badge]: https://img.shields.io/nuget/v/PetToys.CloudflareTurnstileNet?style=flat-square&logo=nuget&label=version
+[nuget-dt-badge]: https://img.shields.io/nuget/dt/PetToys.CloudflareTurnstileNet?style=flat-square&logo=nuget
+[nuget-url]: https://www.nuget.org/packages/PetToys.CloudflareTurnstileNet/
+[test-badge]: https://img.shields.io/github/actions/workflow/status/pet-toys/cloudflare-turnstile-net/test.yml?branch=dev&style=flat-square&logo=github&label=test
+[test-url]: https://github.com/pet-toys/cloudflare-turnstile-net/actions?query=workflow%3Atest+branch%3Adev
