@@ -2,7 +2,7 @@
   <PropertyGroup>
     <FrameworkVersion Condition="'$(TargetFramework)' == 'net8.0'">[8.0.15,9.0.0)</FrameworkVersion>
     <FrameworkVersion Condition="'$(TargetFramework)' == 'net9.0'">[9.0.4,10.0.0)</FrameworkVersion>
-    <RoslinatorVersion>[4.13.1,)</RoslinatorVersion>
+    <RoslinatorVersion>[4.14.0,)</RoslinatorVersion>
   </PropertyGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
   </ItemGroup>
