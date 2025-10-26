@@ -20,7 +20,7 @@ internal sealed class TurnstileService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
     public async Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, bool useIdempotencyKey = false)
