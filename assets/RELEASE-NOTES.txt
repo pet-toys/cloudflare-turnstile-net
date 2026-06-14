@@ -1,0 +1,15 @@
+10.1.0
+======
+
+Added:
+- VerifyAsync now accepts an optional CancellationToken and passes it through
+  the verification HTTP call, so callers can cancel an in-flight check.
+
+Changed:
+- Empty, missing, or whitespace-only tokens now resolve to a failed result
+  immediately, without calling Cloudflare.
+
+Fixed:
+- The field-level error message is now attached to the form field's model-state
+  key, so it surfaces through asp-validation-for instead of only the validation
+  summary.
