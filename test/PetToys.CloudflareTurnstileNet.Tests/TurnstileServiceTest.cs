@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using AwesomeAssertions;
@@ -12,30 +13,14 @@ namespace PetToys.CloudflareTurnstileNet.Tests;
 public sealed class TurnstileServiceTest
 {
     [Theory]
-    [Trait("Category", "Integration")]
-    [InlineData(SecretKeys.AlwaysPasses, true)]
-    [InlineData(SecretKeys.AlwaysFails, false)]
-    [InlineData(SecretKeys.TokenAlreadySpent, false)]
-    public async Task VerifyAsync_WorksCorrectly(string secretKey, bool value)
-    {
-        var provider = CreateProvider(string.Empty, secretKey);
-        var sut = provider.GetRequiredService<ITurnstileService>();
-
-        var result = await sut.VerifyAsync("token", IPAddress.Loopback, true, TestContext.Current.CancellationToken);
-
-        result.Should().Be(value);
-    }
-
-    [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("\t\r\n")]
     public async Task VerifyAsync_EmptyToken_ReturnsFalseWithoutCallingCloudflare(string? token)
     {
-        var handler = new RecordingHandler();
-        var provider = CreateProvider(handler);
-        var sut = provider.GetRequiredService<ITurnstileService>();
+        var handler = new StubHttpMessageHandler();
+        var sut = CreateService(handler);
 
         var result = await sut.VerifyAsync(token!, cancellationToken: TestContext.Current.CancellationToken);
 
@@ -44,11 +29,10 @@ public sealed class TurnstileServiceTest
     }
 
     [Fact]
-    public async Task VerifyAsync_NonEmptyToken_CallsCloudflare()
+    public async Task VerifyAsync_SuccessResponse_ReturnsTrue()
     {
-        var handler = new RecordingHandler("""{"success":true}""");
-        var provider = CreateProvider(handler);
-        var sut = provider.GetRequiredService<ITurnstileService>();
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
 
         var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
 
@@ -57,11 +41,102 @@ public sealed class TurnstileServiceTest
     }
 
     [Fact]
-    public async Task VerifyAsync_PropagatesCancellationToken()
+    public async Task VerifyAsync_UnsuccessfulResponse_ReturnsFalse()
     {
-        var handler = new RecordingHandler();
-        var provider = CreateProvider(handler);
-        var sut = provider.GetRequiredService<ITurnstileService>();
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":false}""");
+        var sut = CreateService(handler);
+
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_NonSuccessStatusCode_ReturnsFalse()
+    {
+        var handler = new StubHttpMessageHandler(HttpStatusCode.InternalServerError, """{"success":true}""");
+        var sut = CreateService(handler);
+
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_PostsToConfiguredEndpoint()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        handler.LastMethod.Should().Be(HttpMethod.Post);
+        handler.LastRequestUri.Should().Be(CloudflareTurnstileOptions.ValidationBaseUri);
+    }
+
+    [Fact]
+    public async Task VerifyAsync_SendsSecretAndToken()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("the-token", cancellationToken: TestContext.Current.CancellationToken);
+
+        var payload = Payload(handler);
+        payload.GetProperty("secret").GetString().Should().Be(SecretKeys.AlwaysPasses);
+        payload.GetProperty("response").GetString().Should().Be("the-token");
+    }
+
+    [Fact]
+    public async Task VerifyAsync_WithRemoteIp_IncludesRemoteIp()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("token", IPAddress.Parse("203.0.113.7"), cancellationToken: TestContext.Current.CancellationToken);
+
+        Payload(handler).GetProperty("remoteip").GetString().Should().Be("203.0.113.7");
+    }
+
+    [Fact]
+    public async Task VerifyAsync_WithoutRemoteIp_OmitsRemoteIp()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        Payload(handler).TryGetProperty("remoteip", out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_WithIdempotencyKey_IncludesParseableGuid()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("token", useIdempotencyKey: true, cancellationToken: TestContext.Current.CancellationToken);
+
+        var key = Payload(handler).GetProperty("idempotency_key").GetString();
+        Guid.TryParse(key, out _).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_WithoutIdempotencyKey_OmitsIdempotencyKey()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        Payload(handler).TryGetProperty("idempotency_key", out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_PropagatesCancellation()
+    {
+        var handler = new StubHttpMessageHandler();
+        var sut = CreateService(handler);
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -69,47 +144,27 @@ public sealed class TurnstileServiceTest
         var act = async () => await sut.VerifyAsync("token", cancellationToken: cts.Token);
 
         await act.Should().ThrowAsync<OperationCanceledException>();
+        handler.CallCount.Should().Be(0);
     }
 
-    private static ServiceProvider CreateProvider(string siteKey, string secretKey)
-    {
-        var services = new ServiceCollection();
-        services.AddCloudflareTurnstile(opt =>
-        {
-            opt.SiteKey = siteKey;
-            opt.SecretKey = secretKey;
-        });
-
-        return services.BuildServiceProvider();
-    }
-
-    private static ServiceProvider CreateProvider(HttpMessageHandler handler)
+    private static ITurnstileService CreateService(HttpMessageHandler handler)
     {
         var services = new ServiceCollection();
         services.AddCloudflareTurnstile(
             opt =>
             {
-                opt.SiteKey = string.Empty;
+                opt.SiteKey = SiteKeys.AlwaysPassesInvisible;
                 opt.SecretKey = SecretKeys.AlwaysPasses;
             },
             builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
 
-        return services.BuildServiceProvider();
+        return services.BuildServiceProvider().GetRequiredService<ITurnstileService>();
     }
 
-    private sealed class RecordingHandler(string responseJson = """{"success":false}""") : HttpMessageHandler
+    private static JsonElement Payload(StubHttpMessageHandler handler)
     {
-        public int CallCount { get; private set; }
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            CallCount++;
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Yield();
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(responseJson),
-            };
-        }
+        handler.LastRequestBody.Should().NotBeNull();
+        using var document = JsonDocument.Parse(handler.LastRequestBody!);
+        return document.RootElement.Clone();
     }
 }

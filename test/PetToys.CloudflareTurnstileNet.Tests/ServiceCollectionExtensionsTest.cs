@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,5 +50,25 @@ public sealed class ServiceCollectionExtensionsTest
         options.Should().NotBeNull();
         options?.Value.SiteKey.Should().Be(SiteKeys.AlwaysPassesInvisible);
         options?.Value.SecretKey.Should().Be(SecretKeys.AlwaysPasses);
+    }
+
+    [Fact]
+    public async Task AddCloudflareTurnstile_WithHttpClientConfiguration_UsesProvidedHandler()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var services = new ServiceCollection();
+        services.AddCloudflareTurnstile(
+            opt =>
+            {
+                opt.SiteKey = SiteKeys.AlwaysPassesInvisible;
+                opt.SecretKey = SecretKeys.AlwaysPasses;
+            },
+            builder => builder.ConfigurePrimaryHttpMessageHandler(() => handler));
+
+        var sut = services.BuildServiceProvider().GetRequiredService<ITurnstileService>();
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeTrue();
+        handler.CallCount.Should().Be(1);
     }
 }
