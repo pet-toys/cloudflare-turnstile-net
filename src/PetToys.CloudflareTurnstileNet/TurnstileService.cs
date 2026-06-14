@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 
@@ -23,8 +24,10 @@ internal sealed class TurnstileService(
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
-    public async Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, bool useIdempotencyKey = false)
+    public async Task<bool> VerifyAsync(string token, IPAddress? remoteIp = null, bool useIdempotencyKey = false, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(token)) return false;
+
         var message = new HttpRequestMessage()
         {
             Method = HttpMethod.Post,
@@ -40,10 +43,10 @@ internal sealed class TurnstileService(
                 JsonOptions),
         };
 
-        var response = await client.SendAsync(message);
+        var response = await client.SendAsync(message, cancellationToken);
         if (!response.IsSuccessStatusCode) return false;
 
-        var json = await response.Content.ReadAsStringAsync();
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
 
         var result = JsonSerializer.Deserialize<ValidationResponse>(json);
         return result?.Success == true;

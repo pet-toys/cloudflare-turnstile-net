@@ -79,13 +79,14 @@ internal sealed class ValidateTurnstileFilter(
                 !await service.VerifyAsync(
                     token.ToString(),
                     useRemoteIp ? context.HttpContext.Connection.RemoteIpAddress : null,
-                    useIdempotencyKey))
+                    useIdempotencyKey,
+                    context.HttpContext.RequestAborted))
             {
                 context.ModelState.AddModelError(string.Empty, GetErrorMessage(context, formErrorMessage));
 
                 if (fieldErrorMessage is not null)
                 {
-                    context.ModelState.AddModelError(string.Empty, GetErrorMessage(context, fieldErrorMessage));
+                    context.ModelState.AddModelError(formField, GetErrorMessage(context, fieldErrorMessage));
                 }
             }
         }
