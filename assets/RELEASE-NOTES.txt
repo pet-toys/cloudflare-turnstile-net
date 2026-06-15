@@ -1,3 +1,13 @@
+10.1.2
+======
+
+Fixed:
+- Internal await points no longer capture the caller's synchronization context,
+  avoiding potential deadlocks in synchronous-over-asynchronous call paths and
+  removing needless context marshalling in the consuming application.
+
+----------
+
 10.1.1
 ======
 
