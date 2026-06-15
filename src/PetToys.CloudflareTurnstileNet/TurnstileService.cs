@@ -47,7 +47,7 @@ internal sealed class TurnstileService(
         HttpResponseMessage response;
         try
         {
-            response = await client.SendAsync(message, cancellationToken);
+            response = await client.SendAsync(message, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -65,7 +65,7 @@ internal sealed class TurnstileService(
 
         if (!response.IsSuccessStatusCode) return false;
 
-        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
         var result = JsonSerializer.Deserialize<ValidationResponse>(json);
         return result?.Success == true;

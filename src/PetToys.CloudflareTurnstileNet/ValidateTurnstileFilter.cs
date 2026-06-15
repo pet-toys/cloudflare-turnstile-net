@@ -24,8 +24,8 @@ internal sealed class ValidateTurnstileFilter(
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        await ValidateRecaptcha(context);
-        await next();
+        await ValidateRecaptcha(context).ConfigureAwait(false);
+        await next().ConfigureAwait(false);
     }
 
     public async Task OnPageHandlerExecutionAsync(PageHandlerExecutingContext context, PageHandlerExecutionDelegate next)
@@ -34,10 +34,10 @@ internal sealed class ValidateTurnstileFilter(
             && !HttpMethods.IsHead(context.HttpContext.Request.Method)
             && !HttpMethods.IsOptions(context.HttpContext.Request.Method))
         {
-            await ValidateRecaptcha(context);
+            await ValidateRecaptcha(context).ConfigureAwait(false);
         }
 
-        await next();
+        await next().ConfigureAwait(false);
     }
 
     [ExcludeFromCodeCoverage]
@@ -81,7 +81,7 @@ internal sealed class ValidateTurnstileFilter(
                     token.ToString(),
                     useRemoteIp ? context.HttpContext.Connection.RemoteIpAddress : null,
                     useIdempotencyKey,
-                    context.HttpContext.RequestAborted))
+                    context.HttpContext.RequestAborted).ConfigureAwait(false))
             {
                 context.ModelState.AddModelError(string.Empty, GetErrorMessage(context, formErrorMessage));
 
