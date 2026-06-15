@@ -13,7 +13,6 @@ using Microsoft.Extensions.Options;
 namespace PetToys.CloudflareTurnstileNet;
 
 internal sealed class ValidateTurnstileFilter(
-    ITurnstileService service,
     string formField,
     string formErrorMessage,
     string? fieldErrorMessage,
@@ -74,6 +73,8 @@ internal sealed class ValidateTurnstileFilter(
         }
         else
         {
+            var service = context.HttpContext.RequestServices.GetRequiredService<ITurnstileService>();
+
             if (!context.HttpContext.Request.Form.TryGetValue(formField, out var token)
                 ||
                 !await service.VerifyAsync(
