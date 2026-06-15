@@ -1,3 +1,20 @@
+10.1.1
+======
+
+Fixed:
+- Transport-level failures when contacting Cloudflare (DNS errors, refused
+  connections, timeouts, or an outage) now resolve to a failed verification
+  instead of surfacing as an unhandled server error. Caller-initiated
+  cancellation still propagates.
+- The idempotency key is now derived deterministically from the verified token,
+  so resubmitting the same token is checked idempotently instead of being
+  rejected as already spent.
+- The MVC and Razor Pages validation filter no longer reuses a request-scoped
+  service across requests, so every request is verified with current options
+  and its own idempotency key.
+
+----------
+
 10.1.0
 ======
 
