@@ -38,10 +38,16 @@ internal static class TurnstileFilterHarness
         bool hasForm = true,
         IDictionary<string, StringValues>? form = null,
         IPAddress? remoteIp = null,
-        IStringLocalizerFactory? localizerFactory = null)
+        IStringLocalizerFactory? localizerFactory = null,
+        ITurnstileService? service = null)
     {
         var services = new ServiceCollection();
         services.Configure<CloudflareTurnstileOptions>(opt => opt.Enabled = enabled);
+        if (service is not null)
+        {
+            services.AddSingleton(service);
+        }
+
         if (localizerFactory is not null)
         {
             services.AddSingleton(localizerFactory);

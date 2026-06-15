@@ -147,6 +147,58 @@ public sealed class TurnstileServiceTest
         handler.CallCount.Should().Be(0);
     }
 
+    [Fact]
+    public async Task VerifyAsync_TransportFailure_ReturnsFalse()
+    {
+        var sut = CreateService(new ThrowingHttpMessageHandler(new HttpRequestException("connection refused")));
+
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_HttpClientTimeout_ReturnsFalse()
+    {
+        // An HttpClient timeout (not caller-initiated) surfaces as a TaskCanceledException;
+        // it must fail closed rather than propagate.
+        var sut = CreateService(new ThrowingHttpMessageHandler(new TaskCanceledException("timeout")));
+
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_SameToken_ProducesStableIdempotencyKey()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("same-token", useIdempotencyKey: true, cancellationToken: TestContext.Current.CancellationToken);
+        var first = Payload(handler).GetProperty("idempotency_key").GetString();
+
+        await sut.VerifyAsync("same-token", useIdempotencyKey: true, cancellationToken: TestContext.Current.CancellationToken);
+        var second = Payload(handler).GetProperty("idempotency_key").GetString();
+
+        second.Should().Be(first);
+    }
+
+    [Fact]
+    public async Task VerifyAsync_DifferentTokens_ProduceDifferentIdempotencyKeys()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");
+        var sut = CreateService(handler);
+
+        await sut.VerifyAsync("token-a", useIdempotencyKey: true, cancellationToken: TestContext.Current.CancellationToken);
+        var keyA = Payload(handler).GetProperty("idempotency_key").GetString();
+
+        await sut.VerifyAsync("token-b", useIdempotencyKey: true, cancellationToken: TestContext.Current.CancellationToken);
+        var keyB = Payload(handler).GetProperty("idempotency_key").GetString();
+
+        keyB.Should().NotBe(keyA);
+    }
+
     private static ITurnstileService CreateService(HttpMessageHandler handler)
     {
         var services = new ServiceCollection();

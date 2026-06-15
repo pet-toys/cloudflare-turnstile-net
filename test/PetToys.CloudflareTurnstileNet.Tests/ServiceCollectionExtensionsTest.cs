@@ -53,6 +53,24 @@ public sealed class ServiceCollectionExtensionsTest
     }
 
     [Fact]
+    public void AddCloudflareTurnstile_ResolvesServiceFromRootProvider()
+    {
+        var services = new ServiceCollection();
+        services.AddCloudflareTurnstile(opt =>
+        {
+            opt.SiteKey = SiteKeys.AlwaysPassesInvisible;
+            opt.SecretKey = SecretKeys.AlwaysPasses;
+        });
+
+        // validateScopes:true rejects captive scoped state: the service must depend on
+        // IOptionsMonitor (singleton), not IOptionsSnapshot (scoped), to resolve here.
+        var provider = services.BuildServiceProvider(validateScopes: true);
+        var resolve = () => provider.GetRequiredService<ITurnstileService>();
+
+        resolve.Should().NotThrow();
+    }
+
+    [Fact]
     public async Task AddCloudflareTurnstile_WithHttpClientConfiguration_UsesProvidedHandler()
     {
         var handler = new StubHttpMessageHandler(responseJson: """{"success":true}""");

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace PetToys.CloudflareTurnstileNet;
 
@@ -24,9 +23,11 @@ public sealed class ValidateCloudflareTurnstileAttribute : Attribute, IFilterFac
 
     public bool UseIdempotencyKey { get; set; }
 
+    // The filter carries no request-scoped state, so a single reusable instance is safe.
+    // ITurnstileService is resolved per request from HttpContext.RequestServices inside the
+    // filter, never captured here.
     public IFilterMetadata CreateInstance(IServiceProvider serviceProvider)
     {
-        var service = serviceProvider.GetRequiredService<ITurnstileService>();
-        return new ValidateTurnstileFilter(service, FormField, FormErrorMessage, FieldErrorMessage, UseRemoteIp, UseIdempotencyKey);
+        return new ValidateTurnstileFilter(FormField, FormErrorMessage, FieldErrorMessage, UseRemoteIp, UseIdempotencyKey);
     }
 }
