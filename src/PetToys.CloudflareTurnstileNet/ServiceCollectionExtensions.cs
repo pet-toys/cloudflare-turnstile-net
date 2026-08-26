@@ -4,8 +4,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace PetToys.CloudflareTurnstileNet;
 
+/// <summary>
+/// Registers Cloudflare Turnstile verification with the dependency injection
+/// container.
+/// </summary>
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Registers <see cref="ITurnstileService"/> and binds
+    /// <see cref="CloudflareTurnstileOptions"/> to a configuration section.
+    /// </summary>
+    /// <param name="services">The service collection to add to.</param>
+    /// <param name="configurationSection">
+    /// The configuration section holding the site key, secret key and enabled flag.
+    /// </param>
+    /// <returns>The same <paramref name="services"/>, for chaining.</returns>
     public static IServiceCollection AddCloudflareTurnstile(this IServiceCollection services, IConfigurationSection configurationSection)
     {
         services.Configure<CloudflareTurnstileOptions>(configurationSection);
@@ -13,6 +26,13 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers <see cref="ITurnstileService"/> and configures
+    /// <see cref="CloudflareTurnstileOptions"/> inline.
+    /// </summary>
+    /// <param name="services">The service collection to add to.</param>
+    /// <param name="configureOptions">Sets the options.</param>
+    /// <returns>The same <paramref name="services"/>, for chaining.</returns>
     public static IServiceCollection AddCloudflareTurnstile(this IServiceCollection services, Action<CloudflareTurnstileOptions> configureOptions)
     {
         services.Configure(configureOptions);
@@ -20,6 +40,18 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers <see cref="ITurnstileService"/>, configures
+    /// <see cref="CloudflareTurnstileOptions"/> inline, and hands the typed
+    /// <c>HttpClient</c> builder over for further configuration.
+    /// </summary>
+    /// <param name="services">The service collection to add to.</param>
+    /// <param name="configureOptions">Sets the options.</param>
+    /// <param name="configureHttpClient">
+    /// Configures the <c>HttpClient</c> the verification call is made through --
+    /// its timeout, resilience handlers, and anything else the caller needs.
+    /// </param>
+    /// <returns>The same <paramref name="services"/>, for chaining.</returns>
     public static IServiceCollection AddCloudflareTurnstile(this IServiceCollection services, Action<CloudflareTurnstileOptions> configureOptions, Action<IHttpClientBuilder> configureHttpClient)
     {
         services.Configure(configureOptions);
