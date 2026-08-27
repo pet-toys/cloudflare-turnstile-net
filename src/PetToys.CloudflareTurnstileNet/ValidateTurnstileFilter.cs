@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,19 +19,19 @@ internal sealed class ValidateTurnstileFilter(
     bool useIdempotencyKey)
     : IAsyncActionFilter, IAsyncPageFilter
 {
-    private static readonly Func<Type, IStringLocalizerFactory, IStringLocalizer> LocalizerProvider = (type, factory) => factory.Create(type);
-
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        await ValidateRecaptcha(context).ConfigureAwait(false);
+        if (!IsSafeMethod(context.HttpContext.Request))
+        {
+            await ValidateRecaptcha(context).ConfigureAwait(false);
+        }
+
         await next().ConfigureAwait(false);
     }
 
     public async Task OnPageHandlerExecutionAsync(PageHandlerExecutingContext context, PageHandlerExecutionDelegate next)
     {
-        if (!HttpMethods.IsGet(context.HttpContext.Request.Method)
-            && !HttpMethods.IsHead(context.HttpContext.Request.Method)
-            && !HttpMethods.IsOptions(context.HttpContext.Request.Method))
+        if (!IsSafeMethod(context.HttpContext.Request))
         {
             await ValidateRecaptcha(context).ConfigureAwait(false);
         }
@@ -46,6 +45,15 @@ internal sealed class ValidateTurnstileFilter(
         return Task.CompletedTask;
     }
 
+    // A safe method carries no form post to verify, so verifying it can only fail -- and on a
+    // controller-scoped attribute it would demand a token from every GET the controller serves.
+    private static bool IsSafeMethod(HttpRequest request)
+    {
+        return HttpMethods.IsGet(request.Method)
+            || HttpMethods.IsHead(request.Method)
+            || HttpMethods.IsOptions(request.Method);
+    }
+
     private static string GetErrorMessage(ActionContext context, string message)
     {
         var localizerFactory = context.HttpContext.RequestServices.GetService<IStringLocalizerFactory>();
@@ -53,10 +61,10 @@ internal sealed class ValidateTurnstileFilter(
 
         var localizer = context.ActionDescriptor switch
         {
-            ControllerActionDescriptor controllerActionDescriptor => LocalizerProvider.Invoke(
-                controllerActionDescriptor.ControllerTypeInfo, localizerFactory),
-            CompiledPageActionDescriptor pageActionDescriptor => LocalizerProvider.Invoke(
-                pageActionDescriptor.HandlerTypeInfo, localizerFactory),
+            ControllerActionDescriptor controllerActionDescriptor => localizerFactory.Create(
+                controllerActionDescriptor.ControllerTypeInfo),
+            CompiledPageActionDescriptor pageActionDescriptor => localizerFactory.Create(
+                pageActionDescriptor.HandlerTypeInfo),
             _ => null,
         };
 

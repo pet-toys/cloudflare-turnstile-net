@@ -1,9 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -40,7 +38,7 @@ internal sealed class TurnstileService(
                     RemoteIp = remoteIp?.ToString(),
                     IdempotencyKey = useIdempotencyKey ? DeriveIdempotencyKey(token) : null,
                 },
-                MediaTypeHeaderValue.Parse(MediaTypeNames.Application.Json),
+                mediaType: null,
                 JsonOptions),
         };
 
@@ -65,10 +63,25 @@ internal sealed class TurnstileService(
 
         if (!response.IsSuccessStatusCode) return false;
 
-        var json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var result = await response.Content
+                .ReadFromJsonAsync<ValidationResponse>(JsonOptions, cancellationToken)
+                .ConfigureAwait(false);
 
-        var result = JsonSerializer.Deserialize<ValidationResponse>(json);
-        return result?.Success == true;
+            return result?.Success == true;
+        }
+        catch (JsonException)
+        {
+            // A malformed or empty body proves nothing about the visitor; fail closed rather
+            // than throwing a parse error out of a filter the caller never sees.
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            // The answer was not JSON at all -- a proxy or captive portal error page.
+            return false;
+        }
     }
 
     // Cloudflare's idempotency key lets the same token be re-verified and return the original

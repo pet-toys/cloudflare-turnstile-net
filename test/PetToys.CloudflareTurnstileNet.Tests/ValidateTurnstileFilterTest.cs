@@ -169,6 +169,39 @@ public sealed class ValidateTurnstileFilterTest
     [InlineData("GET")]
     [InlineData("HEAD")]
     [InlineData("OPTIONS")]
+    public async Task Action_SafeMethod_SkipsValidationAndContinues(string method)
+    {
+        // The attribute is often applied at controller scope; a safe method carries no form
+        // post to verify, so it must reach the action untouched -- just as it does on a page.
+        var service = ServiceReturning(false);
+        var context = ActionContext(HttpContext(form: FormWithToken(), service: service.Object), method: method);
+
+        var nextCalled = await RunAsync(CreateFilter(), context);
+
+        nextCalled.Should().BeTrue();
+        context.ModelState.IsValid.Should().BeTrue();
+        VerifyNeverCalled(service);
+    }
+
+    [Fact]
+    public async Task Action_SafeMethodWithoutForm_SkipsValidationAndContinues()
+    {
+        // A GET is not a form post, and the missing form must not be reported as a failed
+        // challenge on a request the user never answered one for.
+        var service = ServiceReturning(false);
+        var context = ActionContext(HttpContext(hasForm: false, service: service.Object), method: "GET");
+
+        var nextCalled = await RunAsync(CreateFilter(), context);
+
+        nextCalled.Should().BeTrue();
+        context.ModelState.IsValid.Should().BeTrue();
+        VerifyNeverCalled(service);
+    }
+
+    [Theory]
+    [InlineData("GET")]
+    [InlineData("HEAD")]
+    [InlineData("OPTIONS")]
     public async Task Page_SafeMethod_SkipsValidationAndContinues(string method)
     {
         var service = ServiceReturning(false);

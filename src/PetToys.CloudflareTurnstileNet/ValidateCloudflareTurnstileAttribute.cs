@@ -8,6 +8,13 @@ namespace PetToys.CloudflareTurnstileNet;
 /// Verifies the submitted Turnstile token before an MVC action or Razor Page
 /// handler runs, turning a failed challenge into a model-state error.
 /// </summary>
+/// <remarks>
+/// Safe methods -- <c>GET</c>, <c>HEAD</c> and <c>OPTIONS</c> -- are skipped on
+/// both paths, so applying the attribute at controller or page-model scope
+/// guards the posts without demanding a token from the reads. Verification is
+/// also skipped entirely while
+/// <see cref="CloudflareTurnstileOptions.Enabled"/> is <see langword="false"/>.
+/// </remarks>
 [ExcludeFromCodeCoverage]
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
 public sealed class ValidateCloudflareTurnstileAttribute : Attribute, IFilterFactory
