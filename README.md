@@ -27,7 +27,8 @@ This package owns that server half so you don't have to:
 - **Or stay in control.** Inject `ITurnstileService` and call `VerifyAsync`
   yourself when you need the raw boolean and nothing else.
 - **Flip it off where it gets in the way.** A single `Enabled` flag
-  short-circuits verification, so local runs and tests don't need a live widget.
+  short-circuits verification, so local runs and tests don't need a live widget
+  (a testing secret key still has to be configured).
 - **Production details, already handled.** Forward the visitor's IP, send an
   idempotency key for safe retries, localize the error messages, and cancel
   in-flight checks with a `CancellationToken`.
@@ -105,6 +106,21 @@ one fails the application with a message naming the property rather than turning
 every visitor away at request time. `SiteKey` is the widget's half of the pair
 and the server never reads it, so leave it out if you render the widget
 somewhere else.
+
+`SecretKey` stays required even with `Enabled` set to `false`. The flag is
+re-read on every request while startup validation runs once, so a secret waived
+at boot could be needed the moment someone flips the flag; and the flag gates
+the filter alone, never code that resolves `ITurnstileService` itself. Where
+verification is switched off, Cloudflare's own testing keys do the job:
+
+```json
+{
+  "CloudflareTurnstileOptions": {
+    "SecretKey": "1x0000000000000000000000000000000AA",
+    "Enabled": false
+  }
+}
+```
 
 ### Tuning the HTTP client
 
@@ -295,7 +311,8 @@ text.
 
 - **`Enabled` is a hard gate, on the filter.** When it is `false`, the
   validation filter returns immediately: Cloudflare is never called and no model
-  errors are added. `ITurnstileService` callers check it themselves.
+  errors are added. `ITurnstileService` callers check it themselves, and the
+  secret key stays required either way.
 - **Empty tokens fail fast.** A `null`, empty, or whitespace token resolves to
   `false` without a network round-trip.
 - **Only unsafe methods are guarded.** `GET`, `HEAD`, and `OPTIONS` skip

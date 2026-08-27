@@ -5,7 +5,11 @@ Added:
 - Turnstile options are now validated when the host starts. A missing or empty
   secret key fails the application with a message naming the property, instead
   of leaving every verification to fail silently against Cloudflare at request
-  time.
+  time. Note that the secret key is required whatever the Enabled flag says: an
+  application that ran with verification switched off and no secret configured
+  will not start until one is set. Cloudflare's testing keys, such as
+  1x0000000000000000000000000000000AA, are made for exactly that, and the error
+  message says so.
 - The verification HttpClient is now registered with a 10-second timeout in
   place of the framework default of 100 seconds, so an unresponsive endpoint no
   longer holds a request thread. The overload that exposes the HttpClient

@@ -27,9 +27,16 @@ public sealed class CloudflareTurnstileOptions
     /// <summary>
     /// Gets or sets the widget's secret key, taken from the Cloudflare
     /// dashboard. It never leaves the server and authenticates the verification
-    /// call. It is required: without it the host fails to start.
+    /// call. It is required whatever <see cref="Enabled"/> says: without it the
+    /// host fails to start.
     /// </summary>
-    [Required(AllowEmptyStrings = false)]
+    // The requirement does not follow Enabled on purpose. Enabled is bound from
+    // configuration and re-read per request, while startup validation runs once, so a
+    // secret waived at startup could be needed minutes later; and Enabled gates the filter
+    // alone, never a caller that resolves ITurnstileService itself.
+    [Required(AllowEmptyStrings = false, ErrorMessage =
+        "CloudflareTurnstileOptions.SecretKey is required, even when Enabled is false. " +
+        "For local runs and CI use a Cloudflare testing key, for example 1x0000000000000000000000000000000AA.")]
     public string SecretKey { get; set; } = string.Empty;
 
     /// <summary>

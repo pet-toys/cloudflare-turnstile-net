@@ -131,6 +131,35 @@ public sealed class ServiceCollectionExtensionsTest
     }
 
     [Fact]
+    public void AddCloudflareTurnstile_MissingSecretKey_FailsStartupValidation_WhenDisabled()
+    {
+        // The requirement deliberately does not follow Enabled: the flag is re-read per
+        // request while this check runs once, and it gates the filter alone.
+        var services = new ServiceCollection();
+        services.AddCloudflareTurnstile(opt => opt.Enabled = false);
+
+        var validate = () => Validate(services);
+
+        validate.Should().Throw<OptionsValidationException>();
+    }
+
+    [Fact]
+    public void AddCloudflareTurnstile_MissingSecretKey_ExplainsHowToSatisfyIt()
+    {
+        // The message carries the whole fix, because the alternative is a maintainer
+        // wondering why a build that ran yesterday no longer starts.
+        var services = new ServiceCollection();
+        services.AddCloudflareTurnstile(opt => opt.Enabled = false);
+
+        var validate = () => Validate(services);
+
+        validate.Should()
+            .Throw<OptionsValidationException>()
+            .WithMessage($"*{nameof(CloudflareTurnstileOptions.Enabled)}*")
+            .WithMessage($"*{SecretKeys.AlwaysPasses}*");
+    }
+
+    [Fact]
     public void AddCloudflareTurnstile_WithoutSiteKey_PassesStartupValidation()
     {
         // The site key belongs to the browser widget; server-only consumers never render it
