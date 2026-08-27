@@ -52,7 +52,7 @@ like everything else.
   site.
 - **Cancellation** — `VerifyAsync` honors a `CancellationToken` through the
   HTTP call.
-- **Fail-fast configuration** — a missing secret key stops the host at startup
+- **Fail-fast configuration**: a missing secret key stops the host at startup
   instead of failing every challenge at request time.
 - **Typed `HttpClient`** registered through `IHttpClientFactory`, with a
   10-second timeout out of the box.
@@ -100,7 +100,7 @@ builder.Services.AddCloudflareTurnstile(options =>
 });
 ```
 
-Only `SecretKey` is required, and it is checked when the host starts — a missing
+Only `SecretKey` is required, and it is checked when the host starts, so a missing
 one fails the application with a message naming the property rather than turning
 every visitor away at request time. `SiteKey` is the widget's half of the pair
 and the server never reads it, so leave it out if you render the widget
@@ -123,8 +123,8 @@ Whatever you set there wins: the package default is applied first and never
 reapplied over your value.
 
 **Adding a resilience handler? Hand the timeout over to it.**
-`HttpClient.Timeout` bounds the whole call — every retry and every backoff
-inside it — so leaving it at 10 seconds means a pipeline whose own budget is
+`HttpClient.Timeout` bounds the whole call, every retry and every backoff
+inside it, so leaving it at 10 seconds means a pipeline whose own budget is
 30 seconds gets cut off long before it can retry anything. Set the client to
 `Timeout.InfiniteTimeSpan` and let the handler own the deadline:
 
@@ -139,7 +139,7 @@ builder.Services.AddCloudflareTurnstile(
 ```
 
 (`AddStandardResilienceHandler` ships in the separate
-[`Microsoft.Extensions.Http.Resilience`][resilience] package — retries and a
+[`Microsoft.Extensions.Http.Resilience`][resilience] package. Retries and a
 circuit breaker are worth it if a Turnstile outage would otherwise lock your
 forms.)
 
@@ -246,7 +246,7 @@ can't be read as Cloudflare's JSON all return `false` without throwing.
 
 One thing the attribute does for you and the service cannot: honor `Enabled`.
 The service has no way to tell "verification is switched off" from "verify this
-token", so it always verifies — check the flag yourself, as below.
+token", so it always verifies. Check the flag yourself, as below.
 
 ```csharp
 using PetToys.CloudflareTurnstileNet;
@@ -293,7 +293,7 @@ text.
 
 ## Good to know
 
-- **`Enabled` is a hard gate — on the filter.** When it is `false`, the
+- **`Enabled` is a hard gate, on the filter.** When it is `false`, the
   validation filter returns immediately: Cloudflare is never called and no model
   errors are added. `ITurnstileService` callers check it themselves.
 - **Empty tokens fail fast.** A `null`, empty, or whitespace token resolves to
@@ -306,7 +306,7 @@ text.
 - **The verification call times out in 10 seconds** unless you say otherwise.
 - **Anything short of a confirmed answer is a failed challenge.** A timeout, a
   transport error, an unsuccessful status code, or a body that isn't Cloudflare's
-  documented JSON all resolve to `false` — never an exception out of your form
+  documented JSON all resolve to `false`, never an exception out of your form
   post. Only your own `CancellationToken` still throws.
 - **You still own the outcome.** The filter only records model errors — check
   `ModelState.IsValid` in your handler and decide what to return.
