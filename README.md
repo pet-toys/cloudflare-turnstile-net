@@ -111,20 +111,34 @@ somewhere else.
 The verification client is registered with a 10-second timeout, short enough
 that an unresponsive endpoint cannot hold a request thread for the framework's
 default of 100 seconds. Pass a second delegate to reach the `IHttpClientBuilder`
-and change it, or to add a resilience handler:
+and change it:
+
+```csharp
+builder.Services.AddCloudflareTurnstile(
+    options => options.SecretKey = "<your secret key>",
+    http => http.ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(5)));
+```
+
+Whatever you set there wins: the package default is applied first and never
+reapplied over your value.
+
+**Adding a resilience handler? Hand the timeout over to it.**
+`HttpClient.Timeout` bounds the whole call — every retry and every backoff
+inside it — so leaving it at 10 seconds means a pipeline whose own budget is
+30 seconds gets cut off long before it can retry anything. Set the client to
+`Timeout.InfiniteTimeSpan` and let the handler own the deadline:
 
 ```csharp
 builder.Services.AddCloudflareTurnstile(
     options => options.SecretKey = "<your secret key>",
     http =>
     {
-        http.ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(5));
+        http.ConfigureHttpClient(client => client.Timeout = Timeout.InfiniteTimeSpan);
         http.AddStandardResilienceHandler();
     });
 ```
 
-Whatever you set there wins: the package default is applied first and never
-reapplied over your value. (`AddStandardResilienceHandler` ships in the separate
+(`AddStandardResilienceHandler` ships in the separate
 [`Microsoft.Extensions.Http.Resilience`][resilience] package — retries and a
 circuit breaker are worth it if a Turnstile outage would otherwise lock your
 forms.)

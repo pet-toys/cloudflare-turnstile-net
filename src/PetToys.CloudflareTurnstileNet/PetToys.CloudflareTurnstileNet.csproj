@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet package">
-    <Description>Server-side Cloudflare Turnstile verification for ASP.NET Core — one attribute turns a failed challenge into a model-state error in MVC and Razor Pages, an injectable service covers the rest, and a single flag switches it off.</Description>
+    <Description>Server-side Cloudflare Turnstile verification for ASP.NET Core - one attribute turns a failed challenge into a model-state error in MVC and Razor Pages, an injectable service covers the rest, and a single flag switches it off.</Description>
     <PackageTags>cloudflare;turnstile;captcha;bot-protection;aspnetcore;mvc;razor-pages;security;validation</PackageTags>
     <PackageReleaseNotes>(Please write the package release notes in "RELEASE-NOTES.txt".)</PackageReleaseNotes>
     <PackageReadmeFile>README.md</PackageReadmeFile>
