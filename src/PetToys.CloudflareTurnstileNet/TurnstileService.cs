@@ -61,26 +61,31 @@ internal sealed class TurnstileService(
             return false;
         }
 
-        if (!response.IsSuccessStatusCode) return false;
+        // Dispose on every branch: with ResponseContentRead the body is already buffered, so
+        // leaving it to the finalizer keeps that buffer alive for no reason.
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode) return false;
 
-        try
-        {
-            var result = await response.Content
-                .ReadFromJsonAsync<ValidationResponse>(JsonOptions, cancellationToken)
-                .ConfigureAwait(false);
+            try
+            {
+                var result = await response.Content
+                    .ReadFromJsonAsync<ValidationResponse>(JsonOptions, cancellationToken)
+                    .ConfigureAwait(false);
 
-            return result?.Success == true;
-        }
-        catch (JsonException)
-        {
-            // A malformed or empty body proves nothing about the visitor; fail closed rather
-            // than throwing a parse error out of a filter the caller never sees.
-            return false;
-        }
-        catch (NotSupportedException)
-        {
-            // The answer was not JSON at all -- a proxy or captive portal error page.
-            return false;
+                return result?.Success == true;
+            }
+            catch (JsonException)
+            {
+                // A malformed or empty body proves nothing about the visitor; fail closed rather
+                // than throwing a parse error out of a filter the caller never sees.
+                return false;
+            }
+            catch (NotSupportedException)
+            {
+                // The answer was not JSON at all -- a proxy or captive portal error page.
+                return false;
+            }
         }
     }
 
