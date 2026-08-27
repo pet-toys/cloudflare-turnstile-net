@@ -1,3 +1,34 @@
+10.2.0
+======
+
+Added:
+- Turnstile options are now validated when the host starts. A missing or empty
+  secret key fails the application with a message naming the property, instead
+  of leaving every verification to fail silently against Cloudflare at request
+  time.
+- The verification HttpClient is now registered with a 10-second timeout in
+  place of the framework default of 100 seconds, so an unresponsive endpoint no
+  longer holds a request thread. The overload that exposes the HttpClient
+  builder still overrides it, resilience handlers included.
+
+Changed:
+- MVC actions now skip verification for GET, HEAD, and OPTIONS requests, as
+  Razor Pages handlers already did. Applying the validation attribute to a whole
+  controller no longer demands a Turnstile token from every read it serves.
+- The site key is no longer required. It belongs to the browser widget and the
+  server-side verification path never reads it, so applications that render the
+  widget elsewhere, or render none at all, no longer have to configure a value.
+  The secret key stays required.
+
+Fixed:
+- A siteverify response that cannot be read as Cloudflare's documented JSON --
+  an empty or malformed body, or an error page served by a proxy under a 200 --
+  now resolves to a failed verification instead of surfacing as an unhandled
+  server error on the protected form post. Caller-initiated cancellation still
+  propagates.
+
+----------
+
 10.1.3
 ======
 
