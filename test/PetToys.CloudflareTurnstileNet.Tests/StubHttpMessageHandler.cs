@@ -1,6 +1,8 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Net.Mime;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,7 +14,8 @@ namespace PetToys.CloudflareTurnstileNet.Tests;
 /// </summary>
 internal sealed class StubHttpMessageHandler(
     HttpStatusCode statusCode = HttpStatusCode.OK,
-    string responseJson = """{"success":false}""") : HttpMessageHandler
+    string responseJson = """{"success":false}""",
+    string mediaType = MediaTypeNames.Application.Json) : HttpMessageHandler
 {
     public int CallCount { get; private set; }
 
@@ -37,7 +40,9 @@ internal sealed class StubHttpMessageHandler(
 
         return new HttpResponseMessage(statusCode)
         {
-            Content = new StringContent(responseJson),
+            // Cloudflare answers with application/json, and the service reads the body as
+            // JSON, which refuses any other media type.
+            Content = new StringContent(responseJson, Encoding.UTF8, mediaType),
         };
     }
 }

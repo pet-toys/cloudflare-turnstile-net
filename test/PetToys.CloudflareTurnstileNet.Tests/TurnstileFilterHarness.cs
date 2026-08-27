@@ -76,8 +76,10 @@ internal static class TurnstileFilterHarness
     public static IDictionary<string, StringValues> FormWithToken(string token = "token")
         => new Dictionary<string, StringValues> { [FormField] = token };
 
-    public static ActionExecutingContext ActionContext(HttpContext httpContext, ActionDescriptor? descriptor = null)
+    public static ActionExecutingContext ActionContext(HttpContext httpContext, ActionDescriptor? descriptor = null, string method = "POST")
     {
+        httpContext.Request.Method = method;
+
         var actionContext = new ActionContext(
             httpContext,
             new RouteData(),

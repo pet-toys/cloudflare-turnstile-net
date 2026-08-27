@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,6 +56,48 @@ public sealed class TurnstileServiceTest
     public async Task VerifyAsync_NonSuccessStatusCode_ReturnsFalse()
     {
         var handler = new StubHttpMessageHandler(HttpStatusCode.InternalServerError, """{"success":true}""");
+        var sut = CreateService(handler);
+
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("not json at all")]
+    [InlineData("""{"success":""")]
+    public async Task VerifyAsync_UnreadableJsonBody_ReturnsFalse(string responseJson)
+    {
+        // A body the package cannot read proves nothing about the visitor, so it counts as a
+        // failed challenge rather than an unhandled error on the protected form post.
+        var handler = new StubHttpMessageHandler(responseJson: responseJson);
+        var sut = CreateService(handler);
+
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_NonJsonContentType_ReturnsFalse()
+    {
+        // A proxy or captive portal answering 200 with an HTML error page.
+        var handler = new StubHttpMessageHandler(
+            responseJson: "<html><body>Sign in to continue</body></html>",
+            mediaType: MediaTypeNames.Text.Html);
+        var sut = CreateService(handler);
+
+        var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);
+
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifyAsync_JsonNullBody_ReturnsFalse()
+    {
+        var handler = new StubHttpMessageHandler(responseJson: "null");
         var sut = CreateService(handler);
 
         var result = await sut.VerifyAsync("token", cancellationToken: TestContext.Current.CancellationToken);

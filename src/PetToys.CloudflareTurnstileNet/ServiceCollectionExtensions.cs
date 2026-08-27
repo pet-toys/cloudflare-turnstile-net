@@ -8,6 +8,13 @@ namespace PetToys.CloudflareTurnstileNet;
 /// Registers Cloudflare Turnstile verification with the dependency injection
 /// container.
 /// </summary>
+/// <remarks>
+/// Every overload validates <see cref="CloudflareTurnstileOptions"/> when the
+/// host starts, so a missing <see cref="CloudflareTurnstileOptions.SecretKey"/>
+/// fails the application rather than every verification. The verification
+/// <c>HttpClient</c> is registered with a 10-second timeout, which the
+/// <c>configureHttpClient</c> overload can override.
+/// </remarks>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
@@ -62,6 +69,20 @@ public static class ServiceCollectionExtensions
 
     private static IHttpClientBuilder AddTurnstileInternal(this IServiceCollection services)
     {
-        return services.AddHttpClient<ITurnstileService, TurnstileService>((_, client) => client.BaseAddress = CloudflareTurnstileOptions.ValidationBaseUri);
+        // Data annotations on the options are only enforced once something asks for them to
+        // be; validating on start turns a missing secret key into a startup failure naming
+        // the property, instead of every verification quietly failing against Cloudflare.
+        services
+            .AddOptions<CloudflareTurnstileOptions>()
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        // The timeout is applied before the caller's configureHttpClient runs, so an
+        // override there wins rather than being reapplied over.
+        return services.AddHttpClient<ITurnstileService, TurnstileService>((_, client) =>
+        {
+            client.BaseAddress = CloudflareTurnstileOptions.ValidationBaseUri;
+            client.Timeout = CloudflareTurnstileOptions.DefaultHttpClientTimeout;
+        });
     }
 }

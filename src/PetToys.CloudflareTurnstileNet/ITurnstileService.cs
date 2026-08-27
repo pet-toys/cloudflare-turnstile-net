@@ -7,6 +7,13 @@ namespace PetToys.CloudflareTurnstileNet;
 /// <summary>
 /// Verifies a Turnstile token against Cloudflare's siteverify API.
 /// </summary>
+/// <remarks>
+/// <see cref="CloudflareTurnstileOptions.Enabled"/> gates the
+/// <c>[ValidateCloudflareTurnstile]</c> filter, not this service: it cannot tell
+/// "verification is switched off" from "verify this token", so it always
+/// verifies. A caller that injects this service is responsible for checking the
+/// flag itself before calling <see cref="VerifyAsync"/>.
+/// </remarks>
 public interface ITurnstileService
 {
     /// <summary>
@@ -23,8 +30,9 @@ public interface ITurnstileService
     /// <param name="cancellationToken">Cancels the in-flight HTTP call.</param>
     /// <returns>
     /// <see langword="true"/> only when Cloudflare confirms the token. Verification
-    /// fails closed: an empty token, a transport error and an unsuccessful
-    /// response all yield <see langword="false"/> rather than throwing.
+    /// fails closed: an empty token, a transport error, an unsuccessful response
+    /// and a response body that cannot be read as Cloudflare's documented JSON
+    /// all yield <see langword="false"/> rather than throwing.
     /// </returns>
     /// <exception cref="System.OperationCanceledException">
     /// <paramref name="cancellationToken"/> was signalled.

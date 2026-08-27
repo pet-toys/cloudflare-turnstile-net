@@ -27,7 +27,8 @@ This package owns that server half so you don't have to:
 - **Or stay in control.** Inject `ITurnstileService` and call `VerifyAsync`
   yourself when you need the raw boolean and nothing else.
 - **Flip it off where it gets in the way.** A single `Enabled` flag
-  short-circuits verification, so local runs and tests don't need a live widget.
+  short-circuits verification, so local runs and tests don't need a live widget
+  (a testing secret key still has to be configured).
 - **Production details, already handled.** Forward the visitor's IP, send an
   idempotency key for safe retries, localize the error messages, and cancel
   in-flight checks with a `CancellationToken`.
@@ -40,7 +41,8 @@ like everything else.
 
 - **Attribute-based validation** for MVC controllers and Razor Pages
   (`[ValidateCloudflareTurnstile]`); safe methods (`GET`, `HEAD`, `OPTIONS`) are
-  skipped automatically on page handlers.
+  skipped automatically, so the attribute is safe to apply at controller or
+  page-model scope.
 - **Manual validation** through `ITurnstileService.VerifyAsync`.
 - **Form- and field-level errors** — a summary message plus an optional inline
   message attached to the widget field, ready for `asp-validation-for`.
@@ -51,7 +53,10 @@ like everything else.
   site.
 - **Cancellation** — `VerifyAsync` honors a `CancellationToken` through the
   HTTP call.
-- **Typed `HttpClient`** registered through `IHttpClientFactory`.
+- **Fail-fast configuration**: a missing secret key stops the host at startup
+  instead of failing every challenge at request time.
+- **Typed `HttpClient`** registered through `IHttpClientFactory`, with a
+  10-second timeout out of the box.
 
 ## Installation
 
@@ -95,6 +100,64 @@ builder.Services.AddCloudflareTurnstile(options =>
     options.SecretKey = "<your secret key>";
 });
 ```
+
+Only `SecretKey` is required, and it is checked when the host starts, so a missing
+one fails the application with a message naming the property rather than turning
+every visitor away at request time. `SiteKey` is the widget's half of the pair
+and the server never reads it, so leave it out if you render the widget
+somewhere else.
+
+`SecretKey` stays required even with `Enabled` set to `false`. The flag is
+re-read on every request while startup validation runs once, so a secret waived
+at boot could be needed the moment someone flips the flag; and the flag gates
+the filter alone, never code that resolves `ITurnstileService` itself. Where
+verification is switched off, Cloudflare's own testing keys do the job:
+
+```json
+{
+  "CloudflareTurnstileOptions": {
+    "SecretKey": "1x0000000000000000000000000000000AA",
+    "Enabled": false
+  }
+}
+```
+
+### Tuning the HTTP client
+
+The verification client is registered with a 10-second timeout, short enough
+that an unresponsive endpoint cannot hold a request thread for the framework's
+default of 100 seconds. Pass a second delegate to reach the `IHttpClientBuilder`
+and change it:
+
+```csharp
+builder.Services.AddCloudflareTurnstile(
+    options => options.SecretKey = "<your secret key>",
+    http => http.ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(5)));
+```
+
+Whatever you set there wins: the package default is applied first and never
+reapplied over your value.
+
+**Adding a resilience handler? Hand the timeout over to it.**
+`HttpClient.Timeout` bounds the whole call, every retry and every backoff
+inside it, so leaving it at 10 seconds means a pipeline whose own budget is
+30 seconds gets cut off long before it can retry anything. Set the client to
+`Timeout.InfiniteTimeSpan` and let the handler own the deadline:
+
+```csharp
+builder.Services.AddCloudflareTurnstile(
+    options => options.SecretKey = "<your secret key>",
+    http =>
+    {
+        http.ConfigureHttpClient(client => client.Timeout = Timeout.InfiniteTimeSpan);
+        http.AddStandardResilienceHandler();
+    });
+```
+
+(`AddStandardResilienceHandler` ships in the separate
+[`Microsoft.Extensions.Http.Resilience`][resilience] package. Retries and a
+circuit breaker are worth it if a Turnstile outage would otherwise lock your
+forms.)
 
 ## Usage
 
@@ -194,8 +257,12 @@ Add the Turnstile script and the widget `div` to your page. Gating both on
 
 When the attribute doesn't fit, inject `ITurnstileService` and verify the token
 yourself. `VerifyAsync` returns `true` only when Cloudflare confirms the token;
-an empty token, a transport error, or an unsuccessful response all return
-`false` without throwing.
+an empty token, a transport error, an unsuccessful response, or a body that
+can't be read as Cloudflare's JSON all return `false` without throwing.
+
+One thing the attribute does for you and the service cannot: honor `Enabled`.
+The service has no way to tell "verification is switched off" from "verify this
+token", so it always verifies. Check the flag yourself, as below.
 
 ```csharp
 using PetToys.CloudflareTurnstileNet;
@@ -242,12 +309,22 @@ text.
 
 ## Good to know
 
-- **`Enabled` is a hard gate.** When it is `false`, the validation filter returns
-  immediately — Cloudflare is never called and no model errors are added.
+- **`Enabled` is a hard gate, on the filter.** When it is `false`, the
+  validation filter returns immediately: Cloudflare is never called and no model
+  errors are added. `ITurnstileService` callers check it themselves, and the
+  secret key stays required either way.
 - **Empty tokens fail fast.** A `null`, empty, or whitespace token resolves to
   `false` without a network round-trip.
-- **Page filters only guard unsafe methods.** On Razor Pages, `GET`, `HEAD`, and
-  `OPTIONS` requests skip verification; everything else is checked.
+- **Only unsafe methods are guarded.** `GET`, `HEAD`, and `OPTIONS` skip
+  verification on MVC actions and page handlers alike; everything else is
+  checked.
+- **Misconfiguration is a startup error.** `SecretKey` is validated when the host
+  starts, so you find out before the first visitor does.
+- **The verification call times out in 10 seconds** unless you say otherwise.
+- **Anything short of a confirmed answer is a failed challenge.** A timeout, a
+  transport error, an unsuccessful status code, or a body that isn't Cloudflare's
+  documented JSON all resolve to `false`, never an exception out of your form
+  post. Only your own `CancellationToken` still throws.
 - **You still own the outcome.** The filter only records model errors — check
   `ModelState.IsValid` in your handler and decide what to return.
 
@@ -268,4 +345,5 @@ Provided under the [Apache License, Version 2.0][license-url].
 [turnstile]: https://developers.cloudflare.com/turnstile/
 [siteverify]: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
 [cloudflare]: https://dash.cloudflare.com/
+[resilience]: https://www.nuget.org/packages/Microsoft.Extensions.Http.Resilience
 [tests-url]: https://github.com/pet-toys/cloudflare-turnstile-net/tree/dev/test/PetToys.CloudflareTurnstileNet.Tests
